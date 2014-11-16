@@ -13,6 +13,7 @@ I make it in a haste and the FLAGS
 is confusing and I have not corrected
 the error yet.
 
+```
    // 1+2+3+...+100
    mov eax,0
    mov ecx,100
@@ -22,7 +23,7 @@ the error yet.
    print "1+2+3+...+100
    print eax
    end
-
+```
 
 2. ExpressionCalc (2011): A simple expression calculator lib in Java
 
@@ -32,6 +33,7 @@ I use the CalcTree to do calculation
 for a complicated expression and SymbolTable
 supports to hold varibles.
 
+```
    SymbolTableNode stn;
    SymbolTable st;
    CalcTree ct;
@@ -66,11 +68,14 @@ supports to hold varibles.
    double \_val = 0.0;
    \_val = calcTreeValue(ct.getRoot(),st);
    System.out.println(lcs.getLineCode() + " = " + \_val);
+```
 
   For example, in SyCoExp3in1.java:
 
   1+3.0-((((hello+f(x+5))\*2+1.0)/3-3)+9)/4-3
+
   analysis:
+
   [ parent:(left | right) ]
 
   -:(-:(+:(1|3.0) | /:(+:(-:(/:(+:(\*:(+:(hello | ,:(f,+:(x,5))) | 2) | 1.0) | 3) | 3) | 9) | 4) ) | 3)
@@ -104,6 +109,8 @@ supports to hold varibles.
 3. JVCForCsharp (2012)
 
 New Style:
+
+```
    // load jvm
    JavaConnector jvc = new JavaConnector();
    // now options can be customized.
@@ -147,8 +154,11 @@ New Style:
       dFloat.GetFloatValue())); // x = 15, a = 5, b = 6, c = 4, d = 4.4
 
    jvc.FinalizeJVM();
+```
 
 Old Style:
+
+```
    // load jvm
    JavaInterface.JavaConnector jvc = new JavaInterface.JavaConnector();
    jvc.InitializeJVM("testjvm.jar");
@@ -183,4 +193,4 @@ Old Style:
    int date\_gettime = env.GetMethodID(dateclass, "getTime", "()J");
    MessageBox.Show(string.Format("Time: {0}", 
       env.CallLongMethod(dateentity, date_gettime, null)));
-
+```
