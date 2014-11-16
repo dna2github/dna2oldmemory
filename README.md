@@ -62,23 +62,24 @@ supports to hold varibles.
    stn.type = 1;
 
    // try an expression
-   lcs = new LineCodeStream("hello+cube(world) - (world + 2)\*sqr(2) - sqr(cube(double(2)))/hello");
+   lcs = new LineCodeStream(
+      "hello+cube(world) - (world + 2)*sqr(2) - sqr(cube(double(2)))/hello");
    // TODO: proccess every token from lcs.getWord()
    // TODO: and add tokens to calculating tree
-   double \_val = 0.0;
-   \_val = calcTreeValue(ct.getRoot(),st);
-   System.out.println(lcs.getLineCode() + " = " + \_val);
+   double _val = 0.0;
+   _val = calcTreeValue(ct.getRoot(),st);
+   System.out.println(lcs.getLineCode() + " = " + _val);
 ```
 
   For example, in SyCoExp3in1.java:
 
-  1+3.0-((((hello+f(x+5))\*2+1.0)/3-3)+9)/4-3
+  1+3.0-((((hello+f(x+5))*2+1.0)/3-3)+9)/4-3
 
   analysis:
 
   [ parent:(left | right) ]
 
-  -:(-:(+:(1|3.0) | /:(+:(-:(/:(+:(\*:(+:(hello | ,:(f,+:(x,5))) | 2) | 1.0) | 3) | 3) | 9) | 4) ) | 3)
+  -:(-:(+:(1|3.0) | /:(+:(-:(/:(+:(*:(+:(hello | ,:(f,+:(x,5))) | 2) | 1.0) | 3) | 3) | 9) | 4) ) | 3)
 
            -
          /   \
@@ -118,21 +119,21 @@ New Style:
    jvc.InitializeJVM("test.jar");
    // work with jvm
    Java java = jvc.Connect();
-   /\*
-    \*   package ljy.test;
-    \*   public class TestMain {
-    \*   	public static int x = 0;
-    \*   	public static int a, b, c;
-    \*   	public static float d;
-    \*   	public static void main(String[] args) {
-    \*   		x = Integer.valueOf(args[0]) + 4;
-    \*   	}
-    \*   	public static void test(int[] args, float extra) {
-    \*   		a = args[0]; b = args[1]; c = (int)extra; d = extra;
-    \*   		x = a + b + c;
-    \*   	}
-    \*   }
-    \*/
+   /*
+    *   package ljy.test;
+    *   public class TestMain {
+    *   	public static int x = 0;
+    *   	public static int a, b, c;
+    *   	public static float d;
+    *   	public static void main(String[] args) {
+    *   		x = Integer.valueOf(args[0]) + 4;
+    *   	}
+    *   	public static void test(int[] args, float extra) {
+    *   		a = args[0]; b = args[1]; c = (int)extra; d = extra;
+    *   		x = a + b + c;
+    *   	}
+    *   }
+    */
    JavaClass TestMainClass = java.LoadClass("ljy.test.TestMain");
 
    JavaStaticMethod methodMain = TestMainClass.GetStaticMethod("void", "main", "java.lang.String[]");
@@ -165,12 +166,12 @@ Old Style:
    // work with jvm
    JavaInterface.JavaENV env;
    env = jvc.GetJavaENV();
-   /\*
-    \* package ljy.csharp.jvm;
-    \* class Hello {
-    \*    public static int m = 9;
-    \* }
-    \*/
+   /*
+    * package ljy.csharp.jvm;
+    * class Hello {
+    *    public static int m = 9;
+    * }
+    */
    int HelloClass = env.FindClass("ljy/csharp/jvm/Hello");
    int mInt = env.GetStaticFieldID(HelloClass, "m", "I");
    // mVal will get 9
@@ -190,7 +191,7 @@ Old Style:
    int dateclass = env.FindClass("java/util/Date");
    int dateinitmethod = env.GetMethodID(dateclass, "<init>", "()V");
    int dateentity = env.NewObject(dateclass, dateinitmethod, null);
-   int date\_gettime = env.GetMethodID(dateclass, "getTime", "()J");
+   int date_gettime = env.GetMethodID(dateclass, "getTime", "()J");
    MessageBox.Show(string.Format("Time: {0}", 
       env.CallLongMethod(dateentity, date_gettime, null)));
 ```
