@@ -1,0 +1,17 @@
+{
+     "manifest_version": 2,
+     "name": "WebUI Testing Automation",
+     "version": "0.0.1",
+     "background": { "scripts": ["background.js"] },
+     "content_scripts":[
+        {"matches":["file://*"],"js":["content.js"]}
+     ],
+     "permissions": ["tabs"],
+     "page_action": {
+          "default_icon": {
+               "19": "icon.png"
+          },
+          "default_title": "WebUI Testing Automation",
+          "default_popup": "popup.html"
+     }
+}

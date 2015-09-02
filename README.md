@@ -195,3 +195,9 @@ Old Style:
    MessageBox.Show(string.Format("Time: {0}", 
       env.CallLongMethod(dateentity, date_gettime, null)));
 ```
+
+4. Chrome Extension for UI Automation
+
+Extension example.
+
+
