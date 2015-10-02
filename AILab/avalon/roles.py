@@ -1,3 +1,5 @@
+import random
+
 ROLE_MELIN = 9
 ROLE_PASSY = 8
 ROLE_GLANS = 5
@@ -101,12 +103,31 @@ class HumanRole(Role):
         team["people"] = people
         return people
 
+class StupidCommonGoodRole(Role):
+    def vote(self, team, order):
+        if team["major"] == 5 - 1: return True
+        if order["role"]["index"] in team["people"]: return True
+        if random.randint(0,100) >= 50: return True
+        return False
+
+    def task(self, team, order):
+        return True
+
+    def lead(self, team, order):
+        people = random.sample(range(len(order["table"])), team["people"])
+        team["people"] = people
+        return people
+
+class StupidObernRole(StupidCommonGoodRole):
+    def task(self, team, order):
+        return False
+
 ROLE_STRATEGY = {
-  "9": HumanRole(),
-  "8": HumanRole(),
-  "5": HumanRole(),
-  "2": HumanRole(),
-  "-1": HumanRole(),
+  "9":  HumanRole(),
+  "8":  HumanRole(),
+  "5":  HumanRole(),
+  "2":  StupidCommonGoodRole(),
+  "-1": StupidObernRole(),
   "-2": HumanRole(),
   "-5": HumanRole(),
   "-8": HumanRole(),

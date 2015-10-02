@@ -58,13 +58,14 @@ class Deck(object):
                 voteone = ROLE_STRATEGY[str(rolelist[j])]
                 if voteone.vote(info_team, jorder): votec += 1
             if votec > self.n/2:
-                print '[pass] vote for task %d-%d' % (self.major, self.team_fail)
+                print '[pass] vote for task %d-%d' % (
+                    self.major, self.team_fail)
                 self.team_fail = 0
                 taskc = 0
                 for j, role in enumerate(info_team["people"]):
                     jorder = genOrder(rolelist, self.i, role)
                     taskone = one = ROLE_STRATEGY[str(rolelist[role])]
-                    if taskone.task(info_team, jorder): taskc += 1
+                    if not taskone.task(info_team, jorder): taskc += 1
                 if taskc >= self.config.fails[self.major]:
                     print '[fail] task %d (%d/%d)' % (
                         self.major, taskc, len(info_team["people"]))
@@ -73,7 +74,8 @@ class Deck(object):
                     print '[pass] task %d' % (self.major)
                 self.major += 1
             else:
-                print '[fail] vote for task %d-%d' % (self.major, self.minor)
+                print '[fail] vote for task %d-%d' % (
+                    self.major, self.team_fail)
                 self.team_fail += 1
             self.i = (self.i + 1) % self.n
         print '========================'
