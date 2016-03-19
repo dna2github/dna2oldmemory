@@ -1,0 +1,282 @@
+<!doctype html>
+<html>
+<head><title>Pixel Detector</title></head>
+<body>
+<div>Please put your image file as image.png at the same folder that contains me</div>
+<div>
+Step 1. Fill in 'Rotate' and 'Th', then click 'Process';<br />
+Step 2. Hold 'SHIFT' on your keyboard and select a rectangle on the canvas;<br />
+Step 3. Map a real range onto the rectangle area, then click 'Map';<br />
+You will get the result in a table.
+</div>
+<div>
+<div>Rotate: <input id="inRad" type="text" /></div>
+<div>Th: <input id="inTh" type="text" value="128" />
+<input id="inTh2" type="text" value="128" /></div>
+<button onclick="javascript:process();">Process</button>
+</div>
+<div>
+<div>Mapping X: <input id="inX1" type="text"/> ~ <input id="inX2" type="text"/></div>
+<div>Mapping Y: <input id="inY1" type="text"/> ~ <input id="inY2" type="text"/></div>
+<button onclick="javascript:map();">Map</button>
+</div>
+<hr />
+<div>
+<img id="preimg" src="image_read_fx.png" alt="Image" style="display:block;"/>
+</div>
+<div>
+<canvas id="postimg" style="display:none;">Your browser does not support the HTML5 canvas tag!</canvas>
+<div id="postselect" style="display:none; border:1px solid blue;position:absolute;top:0px;left:0px;z-index:5000;"></div>
+</div>
+<div id='result'></div>
+
+<script type='text/javascript'>
+var img = document.getElementById('preimg'),
+    wall = document.getElementById('postimg'),
+    paper = wall.getContext('2d'),
+    frame = document.getElementById('postselect'),
+    result = document.getElementById('result'),
+    xy = {f:null,virual:[0,0,0,0,],real:[0,0,0,0]},
+    h, w, rad;
+function initialize() {
+  rad = Number(document.getElementById('inRad').value)*3.1415926/180;
+  w = img.offsetWidth; h = img.offsetHeight;
+  paper.canvas.width = w;
+  paper.canvas.height = h;
+}
+function rotate() {
+  paper.fillStyle='white';
+  paper.fillRect(0,0,w,h);
+  paper.translate(w/2, h/2);
+  paper.rotate(rad);
+  paper.drawImage(img, -w/2, -h/2);
+}
+function clean() {
+  //paper.rotate(-radius);
+  //paper.translate(-w/2, -h/2);
+  paper.setTransform(1,0,0,1,0,0);
+}
+function blackwhite() {
+  var raw = paper.getImageData(0,0,w,h),
+      val, th, th2, i, n;
+  th = Number(document.getElementById('inTh').value);
+  th2 = Number(document.getElementById('inTh2').value);
+  n = raw.data.length; for(i=0;i<n;i+=4) {
+    val = (raw.data[i]+raw.data[i+1]+raw.data[i+2])/3;
+    if(val > th && val <= th2) {
+      raw.data[i] = raw.data[i+1] = raw.data[i+2] = 0;
+    } else {
+      raw.data[i] = raw.data[i+1] = raw.data[i+2] = 255;
+    }
+    raw.data[i+3] = 255;
+  }
+  paper.putImageData(raw, 0, 0);
+}
+function setpixel(data, i, j, val) {
+  if(i<0 || i>=w || j<0 || j>=h) return;
+  var index = 4*(j*w+i);
+  data[index] = data[index+1] = data[index+2] = val;
+  data[index+3] = 255;
+}
+function getpixel(data, i, j) {
+  if(i<0 || i>=w || j<0 || j>=h) return -1;
+  var index = 4*(j*w+i);
+  return data[index];
+}
+function hit(data, i, j, X) {
+  var points = [
+    getpixel(data,i-1,j-1),
+    getpixel(data,i,j-1),
+    getpixel(data,i+1,j-1),
+    getpixel(data,i-1,j),
+    getpixel(data,i,j),
+    getpixel(data,i+1,j),
+    getpixel(data,i-1,j+1),
+    getpixel(data,i,j+1),
+    getpixel(data,i+1,j+1)
+  ];
+  var i; for(i=0;i<9;i++) {
+    if(X[i]<0) continue;
+    if(X[i] !== points[i]) return false;
+  }
+  return true;
+}
+function thinOnce(data, X) {
+  var hits = [];
+  var i,j,n,t,change;
+  change = false;
+  for(j=0;j<h;j++)
+    for(i=0;i<w;i++) {
+      t = hit(data,i,j,X);
+      hits.push(t);
+      if(t) change = true;
+    }
+  n = hits.length;
+  for(i=0;i<n;i++) {
+    j = 4*i;
+    if(hits[i]) {
+      data[j] = data[j+1] = data[j+2] = 255;
+      data[j+3] = 255;
+    }
+  }
+  return change;
+}
+function thin() {
+  var raw = paper.getImageData(0,0,w,h),
+      data = raw.data,
+      change = true;
+      opr = [
+        [255,255,255, -1,  0, -1,  0,  0,  0],
+        [ -1,255,255,  0,  0,255, -1,  0,255],
+        [255,255, -1,255,  0,  0, -1,  0, -1],
+        [  0, -1,255,  0,  0,255,  0, -1,255],
+        [ -1,  0, -1,  0,  0,255, -1,255,255],
+        [ -1,255,255,  0,  0,255, -1,  0, -1],
+        [  0,  0,  0, -1,  0, -1,255,255,255],
+        [ -1,  0, -1,255,  0,  0,255,255, -1],
+        [ -1,  0, -1,  0,  0,255, -1,255,255],
+        [255, -1,  0,255,  0,  0,255, -1,  0],
+        [255,255, -1,255,  0,  0, -1,  0, -1],
+        [ -1,  0, -1,255,  0,  0,255,255, -1]
+      ],
+      i = 0,
+      n = opr.length,
+      times = 1000;
+  while(change && times) {
+    change = thinOnce(data,opr[i]);
+    ++i; i %= n; --times;
+  }
+  //alert(times);
+  paper.putImageData(raw, 0, 0);
+}
+
+function xyifyOnce(data, i) {
+  var s1,s2,j,t;
+  s1 = s2 = -1;
+  for(j=0;j<h;j++) {
+    t = getpixel(data,i,j);
+    if(t===0) {
+      if(s1<0) s1=j;
+      s2=j;
+    }
+  }
+  if(s1<0) return -1;
+  return (s1+s2)/2;
+}
+function xyify() {
+  var raw = paper.getImageData(0,0,w,h),
+      yval = [],
+      i;
+  for(i=0;i<w;i++) {
+    yval.push(h-xyifyOnce(raw.data,i));
+  }
+  return yval;
+}
+function interact() {
+  img.style.display = 'none';
+  wall.style.display = 'block';
+  (function() {
+    var rect = [0,0,0,0],
+        drawing = false
+        yval = xyify();
+    xy.f = yval;
+    wall.onmousedown = function(e) {
+      var x,y;
+      //if(e.shiftKey) {
+        drawing = true;
+        if(e.offsetX) x=e.offsetX; else x=e.clientX;
+        if(e.offsetY) y=e.offsetY; else y=e.clientY;
+        rect[0] = Math.min(w,Math.max(0,x));
+        rect[1] = Math.min(h,Math.max(0,y));
+      //}
+    };
+    wall.onmouseup = function(e) {
+      var t,x,y;
+      if(drawing) {
+        drawing = false;
+        if(e.offsetX) x=e.offsetX; else x=e.clientX;
+        if(e.offsetY) y=e.offsetY; else y=e.clientY;
+        rect[2] = Math.min(w,Math.max(0,x));
+        rect[3] = Math.min(h,Math.max(0,y));
+        if(rect[0]>rect[2]) {t=rect[0];rect[0]=rect[2];rect[2]=t;}
+        if(rect[1]>rect[3]) {t=rect[1];rect[1]=rect[3];rect[3]=t;}
+        rect[2] = rect[2] - rect[0];
+        rect[3] = rect[3] - rect[1];
+        result.innerHTML =
+          'x='+rect[0]+' y='+rect[1]+'<br />' +
+          'width='+rect[2]+' height='+rect[3];
+        if(rect[2]<10 || rect[3]<10) {
+          frame.style.display = 'none';
+          xy.virtual = [0,0,0,0];
+          return;
+        }
+        xy.virtual = rect;
+        frame.style.display = 'none';
+        frame.style.top = (wall.offsetTop+rect[1])+'px';
+        frame.style.left = (wall.offsetLeft+rect[0])+'px';
+        frame.style.width = rect[2]+'px';
+        frame.style.height = rect[3]+'px';
+        frame.style.display = 'block';
+      }
+    }
+  })();
+}
+
+function process() {
+  initialize();
+  rotate(-0.5);
+  blackwhite();
+  thin();
+  clean();
+
+  interact();
+}
+
+function map() {
+  var t;
+  t = [Number(document.getElementById('inX1').value),
+       Number(document.getElementById('inY1').value),
+       Number(document.getElementById('inX2').value),
+       Number(document.getElementById('inY2').value)];
+  xy.real = [Math.min(t[0],t[2]),
+             Math.min(t[1],t[3]),
+             Math.abs(t[2]-t[0]),
+             Math.abs(t[3]-t[1])];
+  if(!xy.real[2]) {alert('x-range is zero');return;}
+  if(!xy.real[3]) {alert('y-range is zero');return;}
+  var i,j,rx,ry,x1,x2,y1,y2;
+  x1 = xy.virtual[0]; x2 = xy.virtual[0]+xy.virtual[2];
+  y2 = xy.virtual[1]; y1 = xy.virtual[1]+xy.virtual[3];
+  y1 = h - y1; y2 = h - y2;
+  var tbl = document.createElement('table');
+  var t1,t2,t3;
+  t1 = document.createElement('tr');
+  t2 = document.createElement('td'); t2.innerHTML = 'id';
+  t1.appendChild(t2);
+  t2 = document.createElement('td'); t2.innerHTML = 'X';
+  t1.appendChild(t2);
+  t2 = document.createElement('td'); t2.innerHTML = 'Y';
+  t1.appendChild(t2);
+  tbl.appendChild(t1);
+  t = 1;
+  for(i=x1;i<x2;i++) {
+    j = xy.f[i];
+    if(j<y1 || j>y2) continue;
+    rx = xy.real[0]+xy.real[2]/xy.virtual[2]*(i-x1);
+    ry = xy.real[1]+xy.real[3]/xy.virtual[3]*(j-y1);
+    t1 = document.createElement('tr');
+    t2 = document.createElement('td'); t2.innerHTML = ''+t; ++t;
+    t1.appendChild(t2);
+    t2 = document.createElement('td'); t2.innerHTML = ''+rx;
+    t1.appendChild(t2);
+    t2 = document.createElement('td'); t2.innerHTML = ''+ry;
+    t1.appendChild(t2);
+    tbl.appendChild(t1);
+  }
+  t = result.lastChild;
+  if(t) result.removeChild(t);
+  result.appendChild(tbl);
+}
+</script>
+</body>
+</html>
