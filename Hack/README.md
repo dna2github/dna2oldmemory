@@ -10,3 +10,7 @@ Some thing does not work?
 ###### twisted
 
 - 16.0.0
+
+###### python-mysql-replication
+
+- 0.8 (+ pymsql 0.6.7)
