@@ -53,17 +53,17 @@ class TextWalker(object):
       string = self.__next__()
       token += string[0]
       stop = string[1]
-      if stop == '\0':
-        break
-      if self.cursor >= self.n or self.cursor <= 0:
-        token += self.stop
-        break
       if stop == pair:
         break
       elif stop == markEscape:
         token += stop
         token += self.text[self.cursor]
         self.cursor += 1
+      if stop == '\0':
+        break
+      if self.cursor >= self.n or self.cursor <= 0:
+        token += self.stop
+        break
     self.stops = _stops
     self.token = token
     return (self.token, self.stop)
@@ -89,11 +89,6 @@ class TextWalker(object):
       string = self.__next__()
       token += string[0]
       stop = string[1]
-      if stop == '\0':
-        break
-      if self.cursor >= self.n or self.cursor <= 0:
-        token += self.stop
-        break
       if stop == end1st and self.cursor + endlen - 1 <= self.n:
         if self.text[self.cursor:self.cursor+endlen-1] == end[1:]:
           self.stop = end
@@ -104,6 +99,11 @@ class TextWalker(object):
         token += stop
         token += self.text[self.cursor]
         self.cursor += 1
+      if stop == '\0':
+        break
+      if self.cursor >= self.n or self.cursor <= 0:
+        token += self.stop
+        break
     self.cursor += endlen - 1
     self.stops = _stops
     self.token = token
