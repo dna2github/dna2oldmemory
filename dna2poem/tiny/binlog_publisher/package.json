@@ -1,0 +1,14 @@
+{
+  "name": "binlog_publisher",
+  "version": "0.1.0",
+  "description": "MySQL/MariaDB Binary Log Publisher as RESTful HTTP Service",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Seven Lju",
+  "license": "MIT",
+  "dependencies": {
+    "mysql": "^2.10.2"
+  }
+}

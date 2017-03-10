@@ -1,0 +1,7 @@
+mysql-replication==0.9
+PyMySQL==0.6.7
+sqlparse==0.1.19
+
+# yum install epel-release cmake gcc gcc-c++ qt-webkit-devel
+pyside
+ghost.py

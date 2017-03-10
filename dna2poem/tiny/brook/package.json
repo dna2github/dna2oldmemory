@@ -1,0 +1,21 @@
+{
+  "name": "brook",
+  "version": "0.1.0",
+  "description": "Event Queue for Data Router",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dna2github/dna2poem"
+  },
+  "author": "Seven Lju",
+  "license": "MIT",
+  "dependencies": {
+    "body-parser": "~1.15.1",
+    "express": "~4.13.4",
+    "request": "~2.72.0",
+    "mysql": "~2.10.2"
+  }
+}
