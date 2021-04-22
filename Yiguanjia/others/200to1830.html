@@ -1,0 +1,122 @@
+<html>
+<body>
+<div>200 File: <input id="infile" type="file" /></div>
+<div><button id="outfile">1830 File Download</button></div>
+<div>After download, please change file name to *.dat</div>
+<script>
+var infile = document.querySelector('#infile');
+var outfile = document.querySelector('#outfile');
+outfile.addEventListener('click', outfile_click);
+
+function outfile_click() {
+   if (!infile.files[0]) return;
+   var reader = new FileReader();
+   reader.addEventListener('load', function (evt) {
+      var lines = evt.target.result.split('\n');
+      var cols = parse_200_csv(lines);
+      console.log(cols);
+      build_1830_raw(cols);
+   });
+   reader.readAsText(infile.files[0]);
+}
+
+function parse_200_csv(lines) {
+   var header = lines.shift().split(',');
+   var cols = {};
+   var nameindex = {};
+   header.forEach(function (name, i) {
+      cols[i] = [];
+   });
+   lines.forEach(function (line) {
+      if (!line) return;
+      var cells = line.split(',').map(function (x) { return parseInt(x, 10); });
+      cells.forEach(function (x, i) {
+         cols[i].push(x);
+      });
+   });
+   header.forEach(function (name, i) {
+      var t = cols[i];
+      delete cols[i];
+      cols[name.trim()] = t;
+   });
+   return cols;
+}
+
+function build_1830_raw(cols) {
+   var data = cols['PlethWave']; // 0-100
+   // 200 -> 1830 (1830/200 = 9.15)
+   // 9a 0.15 | 9a 0.30 | 9a 0.45 |
+   // 10a -0.55 | 9a -0.40 | 9a -0.25 | 9a -0.10 | 9a 0.05 | 9a 0.20 | 9a 0.35 | 9a 0.50 |
+   // 10a -0.50 | 9a -0.35 | 9a -0.20 | 9a -0.05 | 9a 0.10 | 9a 0.25 | 9a 0.40 | 9a 0.55 |
+   // 10a -0.45 | 9a -0.30 | 9a -0.15 | 9a 0.00
+   // 200 * 60 -> 1830 * 60
+   var buf = new ArrayBuffer(2 * 1830 * 60);
+   var view = new Uint16Array(buf);
+   var walk = 0, p = 0;
+   data.forEach(function (x, i) {
+      var delta = data[i+1];
+      if (!delta && delta !== 0) delta = view[i];
+      delta -= x;
+      n = 9;
+      if (walk === 3 || walk === 11 || walk === 19 || walk == 27) {
+         n = 10;
+         walk ++;
+      } else if (walk === 30) {
+         walk = 0;
+      } else {
+         walk ++;
+      }
+      delta /= n;
+      for(var cur = 0; cur < n; cur++) {
+         view[p++] = x + delta * cur;
+      }
+   });
+   var url = 'data:application/octet-stream;base64,' + base64ArrayBuffer(buf);
+   var a = document.createElement('a');
+   a.href = url;
+   a.download = infile.files[0].name + '.dat';
+   a.click();
+}
+
+function base64ArrayBuffer(arrayBuffer) {
+  var base64    = '';
+  var encodings = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+  var bytes         = new Uint8Array(arrayBuffer);
+  var byteLength    = bytes.byteLength;
+  var byteRemainder = byteLength % 3;
+  var mainLength    = byteLength - byteRemainder;
+  var a, b, c, d;
+  var chunk;
+  // Main loop deals with bytes in chunks of 3
+  for (var i = 0; i < mainLength; i = i + 3) {
+    // Combine the three bytes into a single integer
+    chunk = (bytes[i] << 16) | (bytes[i + 1] << 8) | bytes[i + 2];
+    // Use bitmasks to extract 6-bit segments from the triplet
+    a = (chunk & 16515072) >> 18 // 16515072 = (2^6 - 1) << 18;
+    b = (chunk & 258048)   >> 12 // 258048   = (2^6 - 1) << 12;
+    c = (chunk & 4032)     >>  6 // 4032     = (2^6 - 1) << 6;
+    d = chunk & 63               // 63       = 2^6 - 1;
+    // Convert the raw binary segments to the appropriate ASCII encoding
+    base64 += encodings[a] + encodings[b] + encodings[c] + encodings[d];
+  }
+  // Deal with the remaining bytes and padding
+  if (byteRemainder == 1) {
+    chunk = bytes[mainLength];
+    a = (chunk & 252) >> 2 // 252 = (2^6 - 1) << 2;
+    // Set the 4 least significant bits to zero
+    b = (chunk & 3)   << 4 // 3   = 2^2 - 1;
+    base64 += encodings[a] + encodings[b] + '==';
+  } else if (byteRemainder == 2) {
+    chunk = (bytes[mainLength] << 8) | bytes[mainLength + 1]
+    a = (chunk & 64512) >> 10 // 64512 = (2^6 - 1) << 10;
+    b = (chunk & 1008)  >>  4 // 1008  = (2^6 - 1) << 4;
+    // Set the 2 least significant bits to zero
+    c = (chunk & 15)    <<  2 // 15    = 2^4 - 1;
+    base64 += encodings[a] + encodings[b] + encodings[c] + '=';
+  }
+  
+  return base64;
+}
+</script>
+</body>
+</html>
